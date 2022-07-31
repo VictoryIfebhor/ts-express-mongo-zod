@@ -7,7 +7,8 @@ export const createUser = async (
   >
 ) => {
   try {
-    return await User.create(input);
+    const user = await User.create(input);
+    return user.toJSON();
   } catch (error: any) {
     throw new Error(error);
   }

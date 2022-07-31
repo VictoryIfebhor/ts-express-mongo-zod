@@ -10,7 +10,7 @@ export const signUp = async (
 ) => {
   try {
     const user = await createUser(req.body);
-    res.status(201).json({ user: omit(user.toJSON(), "password") });
+    res.status(201).json({ user: omit(user, "password") });
   } catch (errors: any) {
     logger.error(errors);
     return res.status(400).json({ msg: errors.message });
