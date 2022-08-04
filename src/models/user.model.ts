@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 export interface UserInterface extends mongoose.Document {
   email: string;
@@ -8,6 +9,8 @@ export interface UserInterface extends mongoose.Document {
   createdAt: Date;
   updatedAt: Date;
   comparePassword: (password: string) => Promise<boolean>;
+  generateAccessToken: (session: string) => string;
+  generateRefreshToken: (session: string) => string;
 }
 
 const UserSchema = new mongoose.Schema(
@@ -36,4 +39,24 @@ UserSchema.methods.comparePassword = async function (
   return isPasswordCorrect;
 };
 
-export default mongoose.model("User", UserSchema);
+UserSchema.methods.generateAccessToken = function (session: string) {
+  const user = this;
+  const expiresIn = process.env.ACCESS_TOKEN_TTL as unknown as string;
+  const privateKey = process.env.ACCESS_TOKEN_PRIVATE_KEY as unknown as string;
+  return jwt.sign({ session, email: user.email }, privateKey, {
+    expiresIn,
+    algorithm: "RS256",
+  });
+};
+
+UserSchema.methods.generateRefreshToken = function (session: string) {
+  const user = this;
+  const expiresIn = process.env.REFRESH_TOKEN_TTL as unknown as string;
+  const privateKey = process.env.REFRESH_TOKEN_PRIVATE_KEY as unknown as string;
+  return jwt.sign({ session, email: user.email }, privateKey, {
+    expiresIn,
+    algorithm: "RS256",
+  });
+};
+
+export default mongoose.model<UserInterface>("User", UserSchema);
